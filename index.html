@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выберите 3 карты</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔮 Выберите 3 карты</h1>
+            <p>Коснитесь карт, чтобы выбрать их для расклада</p>
+        </header>
+        
+        <div class="cards-grid" id="cardsGrid">
+            <div class="card" data-card="the_fool">
+                <img src="static/cards/card_back.png" alt="Карта" class="card-image">
+            </div>
+            <div class="card" data-card="the_magician">
+                <img src="static/cards/card_back.png" alt="Карта" class="card-image">
+            </div>
+            <div class="card" data-card="the_high_priestess">
+                <img src="static/cards/card_back.png" alt="Карта" class="card-image">
+            </div>
+            <div class="card" data-card="the_empress">
+                <img src="static/cards/card_back.png" alt="Карта" class="card-image">
+            </div>
+            <div class="card" data-card="the_emperor">
+                <img src="static/cards/card_back.png" alt="Карта" class="card-image">
+            </div>
+            <div class="card" data-card="the_hierophant">
+                <img src="static/cards/card_back.png" alt="Карта" class="card-image">
+            </div>
+            <div class="card" data-card="the_lovers">
+                <img src="static/cards/card_back.png" alt="Карта" class="card-image">
+            </div>
+            <div class="card" data-card="the_chariot">
+                <img src="static/cards/card_back.png" alt="Карта" class="card-image">
+            </div>
+        </div>
+        
+        <div class="selected-cards" id="selectedCards" style="display: none;">
+            <h3>Выбранные карты:</h3>
+            <div class="selected-list" id="selectedList"></div>
+        </div>
+        
+        <div class="continue-section">
+            <button id="continueBtn" class="continue-btn" style="display: none;">
+                Продолжить
+            </button>
+        </div>
+    </div>
+    
+    <script src="static/js/app.js"></script>
+</body>
+</html>
