@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Выбор карт Таро</title>
+    <link rel="stylesheet" href="static/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔮 Выберите 3 карты</h1>
+            <p class="subtitle">Коснитесь карт, чтобы выбрать их для расклада</p>
+        </div>
+        
+        <div class="cards-container">
+            <div class="cards-grid" id="cardsGrid">
+                <!-- Карты будут добавлены через JavaScript -->
+            </div>
+        </div>
+        
+        <div class="selection-info" id="selectionInfo">
+            <div class="counter">
+                <span id="selectedCount">0</span> / 3
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+        
+        <div class="action-area">
+            <button class="continue-btn" id="continueBtn" disabled>
+                <span class="btn-text">Продолжить</span>
+                <span class="btn-icon">✨</span>
+            </button>
+        </div>
+        
+        <!-- Модальное окно для показа выбранных карт -->
+        <div class="modal" id="revealModal" style="display: none;">
+            <div class="modal-content">
+                <h2>Ваши карты</h2>
+                <div class="selected-cards" id="selectedCardsDisplay">
+                    <!-- Выбранные карты будут показаны здесь -->
+                </div>
+                <button class="modal-btn" id="confirmBtn">Получить расклад</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const Telegram = window.Telegram.WebApp;
+        Telegram.ready();
+        Telegram.expand();
+
+        // Все 78 карт Таро
+        const allCards = [
+            // Старшие арканы (22 карты)
+            { slug: 'the-fool', name: 'Дурак', image: 'the-fool.svg' },
+            { slug: 'the-magician', name: 'Маг', image: 'the-magician.svg' },
+            { slug: 'the-high-priestess', name: 'Верховная Жрица', image: 'the-high-priestess.svg' },
+            { slug: 'the-empress', name: 'Императрица', image: 'the-empress.svg' },
+            { slug: 'the-emperor', name: 'Император', image: 'the-emperor.svg' },
+            { slug: 'the-hierophant', name: 'Иерофант', image: 'the-hierophant.svg' },
+            { slug: 'the-lovers', name: 'Влюбленные', image: 'the-lovers.svg' },
+            { slug: 'the-chariot', name: 'Колесница', image: 'the-chariot.svg' },
+            { slug: 'strength', name: 'Сила', image: 'strength.svg' },
+            { slug: 'the-hermit', name: 'Отшельник', image: 'the-hermit.svg' },
+            { slug: 'wheel-of-fortune', name: 'Колесо Фортуны', image: 'wheel-of-fortune.svg' },
+            { slug: 'justice', name: 'Справедливость', image: 'justice.svg' },
+            { slug: 'the-hanged-man', name: 'Повешенный', image: 'the-hanged-man.svg' },
+            { slug: 'death', name: 'Смерть', image: 'death.svg' },
+            { slug: 'temperance', name: 'Умеренность', image: 'temperance.svg' },
+            { slug: 'the-devil', name: 'Дьявол', image: 'the-devil.svg' },
+            { slug: 'the-tower', name: 'Башня', image: 'the-tower.svg' },
+            { slug: 'the-star', name: 'Звезда', image: 'the-star.svg' },
+            { slug: 'the-moon', name: 'Луна', image: 'the-moon.svg' },
+            { slug: 'the-sun', name: 'Солнце', image: 'the-sun.svg' },
+            { slug: 'judgement', name: 'Суд', image: 'judgement.svg' },
+            { slug: 'the-world', name: 'Мир', image: 'the-world.svg' },
+            
+            // Жезлы (14 карт)
+            { slug: 'ace-of-wands', name: 'Туз Жезлов', image: 'ace-of-wands.svg' },
+            { slug: 'two-of-wands', name: 'Двойка Жезлов', image: 'two-of-wands.svg' },
+            { slug: 'three-of-wands', name: 'Тройка Жезлов', image: 'three-of-wands.svg' },
+            { slug: 'four-of-wands', name: 'Четверка Жезлов', image: 'four-of-wands.svg' },
+            { slug: 'five-of-wands', name: 'Пятерка Жезлов', image: 'five-of-wands.svg' },
+            { slug: 'six-of-wands', name: 'Шестерка Жезлов', image: 'six-of-wands.svg' },
+            { slug: 'seven-of-wands', name: 'Семерка Жезлов', image: 'seven-of-wands.svg' },
+            { slug: 'eight-of-wands', name: 'Восьмерка Жезлов', image: 'eight-of-wands.svg' },
+            { slug: 'nine-of-wands', name: 'Девятка Жезлов', image: 'nine-of-wands.svg' },
+            { slug: 'ten-of-wands', name: 'Десятка Жезлов', image: 'ten-of-wands.svg' },
+            { slug: 'page-of-wands', name: 'Паж Жезлов', image: 'page-of-wands.svg' },
+            { slug: 'knight-of-wands', name: 'Рыцарь Жезлов', image: 'knight-of-wands.svg' },
+            { slug: 'queen-of-wands', name: 'Королева Жезлов', image: 'queen-of-wands.svg' },
+            { slug: 'king-of-wands', name: 'Король Жезлов', image: 'king-of-wands.svg' },
+            
+            // Кубки (14 карт)
+            { slug: 'ace-of-cups', name: 'Туз Кубков', image: 'ace-of-cups.svg' },
+            { slug: 'two-of-cups', name: 'Двойка Кубков', image: 'two-of-cups.svg' },
+            { slug: 'three-of-cups', name: 'Тройка Кубков', image: 'three-of-cups.svg' },
+            { slug: 'four-of-cups', name: 'Четверка Кубков', image: 'four-of-cups.svg' },
+            { slug: 'five-of-cups', name: 'Пятерка Кубков', image: 'five-of-cups.svg' },
+            { slug: 'six-of-cups', name: 'Шестерка Кубков', image: 'six-of-cups.svg' },
+            { slug: 'seven-of-cups', name: 'Семерка Кубков', image: 'seven-of-cups.svg' },
+            { slug: 'eight-of-cups', name: 'Восьмерка Кубков', image: 'eight-of-cups.svg' },
+            { slug: 'nine-of-cups', name: 'Девятка Кубков', image: 'nine-of-cups.svg' },
+            { slug: 'ten-of-cups', name: 'Десятка Кубков', image: 'ten-of-cups.svg' },
+            { slug: 'page-of-cups', name: 'Паж Кубков', image: 'page-of-cups.svg' },
+            { slug: 'knight-of-cups', name: 'Рыцарь Кубков', image: 'knight-of-cups.svg' },
+            { slug: 'queen-of-cups', name: 'Королева Кубков', image: 'queen-of-cups.svg' },
+            { slug: 'king-of-cups', name: 'Король Кубков', image: 'king-of-cups.svg' },
+            
+            // Мечи (14 карт)
+            { slug: 'ace-of-swords', name: 'Туз Мечей', image: 'ace-of-swords.svg' },
+            { slug: 'two-of-swords', name: 'Двойка Мечей', image: 'two-of-swords.svg' },
+            { slug: 'three-of-swords', name: 'Тройка Мечей', image: 'three-of-swords.svg' },
+            { slug: 'four-of-swords', name: 'Четверка Мечей', image: 'four-of-swords.svg' },
+            { slug: 'five-of-swords', name: 'Пятерка Мечей', image: 'five-of-swords.svg' },
+            { slug: 'six-of-swords', name: 'Шестерка Мечей', image: 'six-of-swords.svg' },
+            { slug: 'seven-of-swords', name: 'Семерка Мечей', image: 'seven-of-swords.svg' },
+            { slug: 'eight-of-swords', name: 'Восьмерка Мечей', image: 'eight-of-swords.svg' },
+            { slug: 'nine-of-swords', name: 'Девятка Мечей', image: 'nine-of-swords.svg' },
+            { slug: 'ten-of-swords', name: 'Десятка Мечей', image: 'ten-of-swords.svg' },
+            { slug: 'page-of-swords', name: 'Паж Мечей', image: 'page-of-swords.svg' },
+            { slug: 'knight-of-swords', name: 'Рыцарь Мечей', image: 'knight-of-swords.svg' },
+            { slug: 'queen-of-swords', name: 'Королева Мечей', image: 'queen-of-swords.svg' },
+            { slug: 'king-of-swords', name: 'Король Мечей', image: 'king-of-swords.svg' },
+            
+            // Пентакли (14 карт)
+            { slug: 'ace-of-pentacles', name: 'Туз Пентаклей', image: 'ace-of-pentacles.svg' },
+            { slug: 'two-of-pentacles', name: 'Двойка Пентаклей', image: 'two-of-pentacles.svg' },
+            { slug: 'three-of-pentacles', name: 'Тройка Пентаклей', image: 'three-of-pentacles.svg' },
+            { slug: 'four-of-pentacles', name: 'Четверка Пентаклей', image: 'four-of-pentacles.svg' },
+            { slug: 'five-of-pentacles', name: 'Пятерка Пентаклей', image: 'five-of-pentacles.svg' },
+            { slug: 'six-of-pentacles', name: 'Шестерка Пентаклей', image: 'six-of-pentacles.svg' },
+            { slug: 'seven-of-pentacles', name: 'Семерка Пентаклей', image: 'seven-of-pentacles.svg' },
+            { slug: 'eight-of-pentacles', name: 'Восьмерка Пентаклей', image: 'eight-of-pentacles.svg' },
+            { slug: 'nine-of-pentacles', name: 'Девятка Пентаклей', image: 'nine-of-pentacles.svg' },
+            { slug: 'ten-of-pentacles', name: 'Десятка Пентаклей', image: 'ten-of-pentacles.svg' },
+            { slug: 'page-of-pentacles', name: 'Паж Пентаклей', image: 'page-of-pentacles.svg' },
+            { slug: 'knight-of-pentacles', name: 'Рыцарь Пентаклей', image: 'knight-of-pentacles.svg' },
+            { slug: 'queen-of-pentacles', name: 'Королева Пентаклей', image: 'queen-of-pentacles.svg' },
+            { slug: 'king-of-pentacles', name: 'Король Пентаклей', image: 'king-of-pentacles.svg' }
+        ];
+
+        let selectedCards = [];
+        const maxCards = 3;
+
+        function initCards() {
+            const grid = document.getElementById('cardsGrid');
+            
+            // Выбираем 7 рандомных карт из всех 78
+            const shuffled = [...allCards].sort(() => 0.5 - Math.random());
+            const displayCards = shuffled.slice(0, 7);
+            
+            // Создаем верхний ряд (3 карты)
+            const topRow = document.createElement('div');
+            topRow.className = 'cards-row top-row';
+            
+            // Создаем нижний ряд (4 карты)
+            const bottomRow = document.createElement('div');
+            bottomRow.className = 'cards-row bottom-row';
+            
+            displayCards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                cardElement.dataset.slug = card.slug;
+                cardElement.dataset.cardData = JSON.stringify(card);
+                
+                cardElement.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-back">
+                            <div class="card-back-design">
+                                <div class="mystical-pattern">
+                                    <div class="pattern-circle"></div>
+                                    <div class="pattern-lines"></div>
+                                    <div class="pattern-stars">✦</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-front">
+                            <div class="card-image">
+                                <img src="static/cards/${card.image}" alt="${card.name}" onerror="this.style.backgroundImage='linear-gradient(45deg, #6a5acd, #9370db)'">
+                            </div>
+                            <div class="card-name">${card.name}</div>
+                        </div>
+                    </div>
+                    <div class="selection-indicator">
+                        <div class="selection-number">${index + 1}</div>
+                    </div>
+                `;
+                
+                cardElement.addEventListener('click', () => toggleCard(cardElement, card));
+                
+                // Первые 3 карты в верхний ряд, остальные 4 в нижний
+                if (index < 3) {
+                    topRow.appendChild(cardElement);
+                } else {
+                    bottomRow.appendChild(cardElement);
+                }
+                
+                // Добавляем небольшую задержку для анимации появления
+                setTimeout(() => {
+                    cardElement.classList.add('appear');
+                }, index * 100);
+            });
+            
+            // Добавляем ряды в контейнер
+            grid.appendChild(topRow);
+            grid.appendChild(bottomRow);
+        }
+
+        function toggleCard(cardElement, card) {
+            const isSelected = selectedCards.some(c => c.slug === card.slug);
+            
+            if (isSelected) {
+                // Убираем карту
+                selectedCards = selectedCards.filter(c => c.slug !== card.slug);
+                cardElement.classList.remove('selected');
+                
+                // Анимация снятия выделения
+                cardElement.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    cardElement.style.transform = '';
+                }, 200);
+            } else {
+                // Добавляем карту, если не превышен лимит
+                if (selectedCards.length < maxCards) {
+                    selectedCards.push({ slug: card.slug, reversed: false });
+                    cardElement.classList.add('selected');
+                    
+                    // Анимация выбора
+                    cardElement.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        cardElement.style.transform = 'scale(1.05)';
+                    }, 200);
+                } else {
+                    // Анимация "нельзя выбрать"
+                    cardElement.style.transform = 'translateX(-10px)';
+                    setTimeout(() => {
+                        cardElement.style.transform = 'translateX(10px)';
+                        setTimeout(() => {
+                            cardElement.style.transform = '';
+                        }, 100);
+                    }, 100);
+                }
+            }
+            
+            updateUI();
+        }
+
+        function updateUI() {
+            const selectedCount = document.getElementById('selectedCount');
+            const continueBtn = document.getElementById('continueBtn');
+            const progressFill = document.getElementById('progressFill');
+            
+            selectedCount.textContent = selectedCards.length;
+            
+            // Обновляем прогресс-бар
+            const progress = (selectedCards.length / maxCards) * 100;
+            progressFill.style.width = progress + '%';
+            
+            if (selectedCards.length === maxCards) {
+                continueBtn.disabled = false;
+                continueBtn.classList.add('enabled');
+                
+                // Анимация готовности
+                continueBtn.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    continueBtn.style.transform = '';
+                }, 300);
+            } else {
+                continueBtn.disabled = true;
+                continueBtn.classList.remove('enabled');
+            }
+        }
+
+        function showSelectedCards() {
+            const modal = document.getElementById('revealModal');
+            const selectedCardsDisplay = document.getElementById('selectedCardsDisplay');
+            
+            // Очищаем предыдущие карты
+            selectedCardsDisplay.innerHTML = '';
+            
+            // Показываем выбранные карты с анимацией переворота
+            selectedCards.forEach((selectedCard, index) => {
+                const cardData = JSON.parse(document.querySelector(`[data-slug="${selectedCard.slug}"]`).dataset.cardData);
+                
+                const cardElement = document.createElement('div');
+                cardElement.className = 'revealed-card';
+                cardElement.innerHTML = `
+                    <div class="card-inner flipping">
+                        <div class="card-back">
+                            <div class="card-back-design">
+                                <div class="mystical-pattern">
+                                    <div class="pattern-circle"></div>
+                                    <div class="pattern-lines"></div>
+                                    <div class="pattern-stars">✦</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-front">
+                            <div class="card-image">
+                                <img src="static/cards/${cardData.image}" alt="${cardData.name}">
+                            </div>
+                            <div class="card-name">${cardData.name}</div>
+                        </div>
+                    </div>
+                `;
+                
+                selectedCardsDisplay.appendChild(cardElement);
+                
+                // Анимация переворота с задержкой
+                setTimeout(() => {
+                    cardElement.querySelector('.card-inner').classList.add('flipped');
+                }, index * 300 + 500);
+            });
+            
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+        }
+
+        function sendData() {
+            if (selectedCards.length === maxCards) {
+                const data = {
+                    cards: selectedCards
+                };
+                
+                Telegram.sendData(JSON.stringify(data));
+                Telegram.close();
+            }
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', initCards);
+        document.getElementById('continueBtn').addEventListener('click', showSelectedCards);
+        document.getElementById('confirmBtn').addEventListener('click', sendData);
+    </script>
+</body>
+</html>
